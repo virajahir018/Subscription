@@ -1,17 +1,13 @@
 const jwt = require("jsonwebtoken");
 
-function generateToken(obj, type) {
-    let token;
+function generateToken(obj) {
 
-    if (type == "access") {
-        token = jwt.sign({ ...obj }, process.env.JWT, { expiresIn: 900 })
-    }
+    const accessToken = jwt.sign({ ...obj, type: "access" }, process.env.JWT, { expiresIn: 900 })
 
-    if (type == "refresh") {
-        token = jwt.sign({ ...obj }, process.env.JWT, { expiresIn: "7d" })
-    }
+    const refreshToken = jwt.sign({ ...obj, type: "refresh" }, process.env.JWT, { expiresIn: "7d" })
 
-    return token;
+    console.log(refreshToken)
+    return { accessToken, refreshToken };
 }
 
 module.exports = generateToken;

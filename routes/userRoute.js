@@ -3,7 +3,8 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const generateToken = require("../token/generateToken");
 const authentication = require("../middleware/authentication");
-const admin = require("../middleware/Admin");
+const refresh = require("../middleware/refresh");
+const jwt = require("jsonwebtoken");
 
 const userRouters = express.Router();
 
@@ -17,7 +18,10 @@ userRouters.post("/register", async (req, res) => {
 
         res.json({
             message: "User register successfully",
-            user
+            user: {
+                name: user.name,
+                email: user.email
+            }
         });
 
     } catch (error) {
@@ -33,6 +37,12 @@ userRouters.post("/login", async (req, res) => {
 
         const user = await User.findOne({ email });
 
+        if (!user) {
+            return res.json({
+                message: "Email not register"
+            })
+        }
+
         const match = await bcrypt.compare(password, user.password);
 
         if (!match) {
@@ -41,20 +51,12 @@ userRouters.post("/login", async (req, res) => {
             })
         }
 
-        const access = await generateToken(
-            {
-                id: user._id,
-                email: user.email,
-                role: user.role
-            }, "access"
-        )
-        const refresh = await generateToken(
-            {
-                id: user._id,
-                email: user.email,
-                role: user.role
-            }, "refresh"
-        )
+        const tokens = generateToken({
+            id: user._id,
+            email: user.email,
+            role: user.role
+        });
+
         res.json({
             message: "User login successfully",
             user: {
@@ -62,8 +64,8 @@ userRouters.post("/login", async (req, res) => {
                 name: user.name,
                 email: user.email,
             },
-            access,
-            refresh
+            access: tokens.accessToken,
+            refresh: tokens.refreshToken
         });
 
     } catch (error) {
@@ -73,7 +75,36 @@ userRouters.post("/login", async (req, res) => {
     }
 })
 
-userRouters.post("/logout", authentication,admin, async (req, res) => {
+userRouters.get("/profile", authentication, async (req, res) => {
+
+    res.json({
+        message: "Profile accessed",
+        userId: req.user.id
+    });
+}
+);
+
+userRouters.post("/refresh", refresh, async (req, res) => {
+
+    const accessToken = jwt.sign(
+        {
+            id: req.user.id,
+            type: "access"
+        },
+        process.env.JWT,
+        {
+            expiresIn: "15m"
+        }
+    );
+
+    res.json({
+        message: "Access token refreshed successfully",
+        accessToken
+    });
+}
+);
+
+userRouters.post("/logout", authentication, async (req, res) => {
     try {
         res.json({
             message: "Logout successfully",
@@ -88,7 +119,5 @@ userRouters.post("/logout", authentication,admin, async (req, res) => {
         })
     }
 })
-
-
 
 module.exports = userRouters;

@@ -1,22 +1,22 @@
 const jwt = require("jsonwebtoken");
 
-function authMiddleware(req, res, next) {
+function refresh(req, res, next) {
 
     try {
 
-        const token = req.headers.access?.split(" ")[1];
+        const token = req.headers.refresh?.split(" ")[1];
 
         if (!token) {
             return res.json({
-                message: "Access token required"
+                message: "Refresh token required"
             });
         }
 
         const decoded = jwt.verify(token, process.env.JWT);
 
-        if (decoded.type !== "access") {
+        if (decoded.type !== "refresh") {
             return res.json({
-                message: "Invalid access token"
+                message: "Invalid refresh token"
             });
         }
 
@@ -27,9 +27,9 @@ function authMiddleware(req, res, next) {
     } catch (error) {
 
         return res.json({
-            message: "Invalid or expired access token"
+            message: "Invalid or expired refresh token"
         });
     }
 }
 
-module.exports = authMiddleware;
+module.exports = refresh;

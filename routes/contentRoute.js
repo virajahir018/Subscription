@@ -1,7 +1,8 @@
 const express = require("express");
 const authentication = require("../middleware/authentication");
-const admin = require("../middleware/Admin");
+const admin = require("../middleware/admin");
 const Content = require("../models/Content");
+const Subscription = require("../models/Subscription");
 
 const contentRouter = express.Router();
 
@@ -34,7 +35,7 @@ contentRouter.put("/update", authentication, admin, async (req, res) => {
 
         content.plan = plan
 
-        content.save();
+        await content.save();
 
         res.json({
             message: "Content update successfully",
@@ -48,25 +49,35 @@ contentRouter.put("/update", authentication, admin, async (req, res) => {
 })
 
 contentRouter.delete("/delete/:id", authentication, admin, async (req, res) => {
-    const content = await Content.findOneAndDelete(req.params.id)
+    try {
+        const content = await Content.findByIdAndDelete(req.params.id)
 
-    res.json({
-        message: "Content delete successfully",
-        content
-    })
+        res.json({
+            message: "Content delete successfully",
+            content
+        })
+    } catch (error) {
+        res.json({
+            message: error.message,
+        })
+    }
 })
 
 contentRouter.get("/view", authentication, async (req, res) => {
     try {
-        const userPlan = req.user.plan;
+        const user = await Subscription.findOne({ user: req.user.id })
 
-        let alwPlan = ["free"];
+        let alwPlan = [];
 
-        if (userPlan === "basic") {
+        if (user.plan === "free") {
+            alwPlan = ["free"];
+        }
+
+        if (user.plan === "premium") {
             alwPlan = ["free", "premium"];
         }
 
-        if (userPlan === "premium" || req.user.role == "admin") {
+        if (user.plan === "pro" || req.user.role == "admin") {
             alwPlan = ["free", "premium", "pro"];
         }
 
