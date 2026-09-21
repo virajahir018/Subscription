@@ -65,24 +65,22 @@ contentRouter.delete("/delete/:id", authentication, admin, async (req, res) => {
 
 contentRouter.get("/view", authentication, async (req, res) => {
     try {
-        const user = await Subscription.findOne({ user: req.user.id })
+        const subscription = await Subscription.findOne({ user: req.user.id })
 
-        let alwPlan = [];
+        let allowedPlans = [];
 
-        if (user.plan === "free") {
-            alwPlan = ["free"];
-        }
-
-        if (user.plan === "premium") {
-            alwPlan = ["free", "premium"];
-        }
-
-        if (user.plan === "pro" || req.user.role == "admin") {
-            alwPlan = ["free", "premium", "pro"];
+        if (!subscription) {
+            allowedPlans = ["free"];
+        } else if (subscription.plan === "free") {
+            allowedPlans = ["free"];
+        } else if (subscription.plan === "premium") {
+            allowedPlans = ["free", "premium"];
+        } else if (subscription.plan === "pro" || req.user.role === "admin") {
+            allowedPlans = ["free", "premium", "pro"];
         }
 
         const content = await Content.find({
-            plan: { $in: alwPlan }
+            plan: { $in: allowedPlans }
         });
 
         res.json({

@@ -4,7 +4,7 @@ function authMiddleware(req, res, next) {
 
     try {
 
-        const token = req.headers.access?.split(" ")[1];
+        const token = req.cookies?.access
 
         if (!token) {
             return res.json({

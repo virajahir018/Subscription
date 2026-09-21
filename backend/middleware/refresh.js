@@ -4,7 +4,7 @@ function refresh(req, res, next) {
 
     try {
 
-        const token = req.headers.refresh?.split(" ")[1];
+        const token = req.cookies?.refresh
 
         if (!token) {
             return res.json({

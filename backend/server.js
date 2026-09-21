@@ -5,10 +5,12 @@ const connectDB = require("./config/db");
 const userRouters = require("./routes/userRoute");
 const contentRouter = require("./routes/contentRoute");
 const subRouter = require("./routes/subscriptionRoute");
+const cookie = require("cookie-parser");
 
 const app = express();
 
 app.use(express.json());
+app.use(cookie());
 
 app.use("/user", userRouters)
 app.use("/content", contentRouter)

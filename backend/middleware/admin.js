@@ -1,7 +1,7 @@
 function admin(req, res, next) {
     try {
 
-        if (req.user.role !== "admin") {
+        if (!req.user || req.user.role !== "admin") {
             return res.json({
                 message: "Access denied. Admin only"
             });

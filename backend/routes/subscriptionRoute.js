@@ -21,6 +21,10 @@ subRouter.post("/get", authentication, async (req, res) => {
             })
         }
 
+        if (!plan) {
+            plan = "free"
+        }
+
         const subscription = await Subscription.create({
             user: req.user.id,
             plan

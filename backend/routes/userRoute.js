@@ -5,16 +5,42 @@ const generateToken = require("../token/generateToken");
 const authentication = require("../middleware/authentication");
 const refresh = require("../middleware/refresh");
 const jwt = require("jsonwebtoken");
+const admin = require("../middleware/admin");
 
 const userRouters = express.Router();
 
 userRouters.post("/register", async (req, res) => {
     try {
-        const { password } = req.body
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.json({
+                message: "Name, email and password are required"
+            });
+        }
+
+        if (password.length < 6) {
+            return res.json({
+                message: "Password must be at least 6 characters"
+            });
+        }
+
+        const existingUser = await User.findOne({ email });
+
+        if (existingUser) {
+            return res.json({
+                message: "Email already registered"
+            });
+        }
 
         const hash = await bcrypt.hash(password, 10)
 
-        const user = await User.create({ ...req.body, password: hash });
+        const user = await User.create({
+            name,
+            email,
+            password: hash,
+            role: "user"
+        });
 
         res.json({
             message: "User register successfully",
@@ -34,6 +60,12 @@ userRouters.post("/register", async (req, res) => {
 userRouters.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body
+
+        if (!email || !password) {
+            return res.json({
+                message: "Email and password are required"
+            });
+        }
 
         const user = await User.findOne({ email });
 
@@ -57,6 +89,20 @@ userRouters.post("/login", async (req, res) => {
             role: user.role
         });
 
+        res.cookie("access", tokens.accessToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 15 * 60 * 1000
+        })
+
+        res.cookie("refresh", tokens.refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+
         res.json({
             message: "User login successfully",
             user: {
@@ -79,16 +125,22 @@ userRouters.get("/profile", authentication, async (req, res) => {
 
     res.json({
         message: "Profile accessed",
-        userId: req.user.id
+        user: {
+            id: req.user.id,
+            email: req.user.email,
+            role: req.user.role
+        }
     });
 }
 );
 
-userRouters.post("/refresh", refresh, async (req, res) => {
+userRouters.post("/refresh", authentication, refresh, async (req, res) => {
 
     const accessToken = jwt.sign(
         {
             id: req.user.id,
+            email: req.user.email,
+            role: req.user.role,
             type: "access"
         },
         process.env.JWT,
@@ -96,6 +148,13 @@ userRouters.post("/refresh", refresh, async (req, res) => {
             expiresIn: "15m"
         }
     );
+
+    res.cookie("access", accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 15 * 60 * 1000
+    })
 
     res.json({
         message: "Access token refreshed successfully",
@@ -113,11 +172,20 @@ userRouters.post("/logout", authentication, async (req, res) => {
                 email: req.user.email
             }
         })
+
+        res.clearCookie("access");
+
     } catch (error) {
         res.json({
             message: error.message
         })
     }
+})
+
+userRouters.get("/all", authentication, admin, async (req, res) => {
+    const users = await User.find();
+
+    res.json(users)
 })
 
 module.exports = userRouters;
