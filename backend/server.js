@@ -8,6 +8,7 @@ const subRouter = require("./routes/subscriptionRoute");
 const cookie = require("cookie-parser");
 
 const app = express();
+const PORT = process.env.PORT
 
 app.use(express.json());
 app.use(cookie());
@@ -27,11 +28,11 @@ async function startServer() {
         await connectDB();
 
         app.listen(process.env.PORT, () => {
-            console.log("Server running on port", process.env.PORT);
+            console.log("Server running on port", PORT);
         });
 
     } catch (error) {
-        console.log("Database connection failed");
+        console.log("Database connection failed", error.message);
         process.exit(1);
     }
 }

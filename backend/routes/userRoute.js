@@ -1,10 +1,10 @@
 const express = require("express");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const generateToken = require("../token/generateToken");
 const authentication = require("../middleware/authentication");
 const refresh = require("../middleware/refresh");
-const jwt = require("jsonwebtoken");
 const admin = require("../middleware/admin");
 
 const userRouters = express.Router();
@@ -42,7 +42,7 @@ userRouters.post("/register", async (req, res) => {
             role: "user"
         });
 
-        res.json({
+        return res.json({
             message: "User register successfully",
             user: {
                 name: user.name,
@@ -51,7 +51,7 @@ userRouters.post("/register", async (req, res) => {
         });
 
     } catch (error) {
-        res.json({
+        return res.json({
             message: error.message
         })
     }
@@ -103,19 +103,17 @@ userRouters.post("/login", async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
-        res.json({
+        return res.json({
             message: "User login successfully",
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
             },
-            access: tokens.accessToken,
-            refresh: tokens.refreshToken
         });
 
     } catch (error) {
-        res.json({
+        return res.json({
             message: error.message
         })
     }
@@ -123,7 +121,7 @@ userRouters.post("/login", async (req, res) => {
 
 userRouters.get("/profile", authentication, async (req, res) => {
 
-    res.json({
+    return res.json({
         message: "Profile accessed",
         user: {
             id: req.user.id,
@@ -144,9 +142,7 @@ userRouters.post("/refresh", authentication, refresh, async (req, res) => {
             type: "access"
         },
         process.env.JWT,
-        {
-            expiresIn: "15m"
-        }
+        { expiresIn: "15m" }
     );
 
     res.cookie("access", accessToken, {
@@ -156,29 +152,24 @@ userRouters.post("/refresh", authentication, refresh, async (req, res) => {
         maxAge: 15 * 60 * 1000
     })
 
-    res.json({
+    return res.json({
         message: "Access token refreshed successfully",
         accessToken
     });
-}
-);
+});
 
 userRouters.post("/logout", authentication, async (req, res) => {
     try {
-        res.json({
-            message: "Logout successfully",
-            user: {
-                id: req.user.id,
-                email: req.user.email
-            }
-        })
-
         res.clearCookie("access");
+        res.clearCookie("refresh");
 
+        return res.json({
+            message: "Logout successfully"
+        });
     } catch (error) {
-        res.json({
+        return res.json({
             message: error.message
-        })
+        });
     }
 })
 

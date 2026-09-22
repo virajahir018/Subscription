@@ -10,12 +10,12 @@ contentRouter.post("/create", authentication, admin, async (req, res) => {
     try {
         const content = await Content.create(req.body)
 
-        res.json({
+        return res.json({
             message: "Content create successfully",
             content
         })
     } catch (error) {
-        res.json({
+        return res.json({
             message: error.message
         })
     }
@@ -34,15 +34,14 @@ contentRouter.put("/update", authentication, admin, async (req, res) => {
         }
 
         content.plan = plan
-
         await content.save();
 
-        res.json({
+        return res.json({
             message: "Content update successfully",
             content
         })
     } catch (error) {
-        res.json({
+        return res.json({
             message: error.message
         })
     }
@@ -52,12 +51,18 @@ contentRouter.delete("/delete/:id", authentication, admin, async (req, res) => {
     try {
         const content = await Content.findByIdAndDelete(req.params.id)
 
-        res.json({
+        if (!content) {
+            return res.status(404).json({
+                message: "Content not found"
+            });
+        }
+
+        return res.json({
             message: "Content delete successfully",
             content
         })
     } catch (error) {
-        res.json({
+        return res.json({
             message: error.message,
         })
     }
@@ -83,13 +88,13 @@ contentRouter.get("/view", authentication, async (req, res) => {
             plan: { $in: allowedPlans }
         });
 
-        res.json({
+        return res.json({
             message: "Content fetched successfully",
             content
         });
 
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             message: error.message
         });
     }
