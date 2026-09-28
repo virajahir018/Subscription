@@ -1,19 +1,11 @@
 function admin(req, res, next) {
-    try {
-
-        if (!req.user || req.user.role !== "admin") {
-            return res.json({
-                message: "Access denied. Admin only"
-            });
-        }
-
-        next();
-
-    } catch (error) {
-        res.json({
-            message: error.message
+    if (!req.user || req.user.role !== "admin") {
+        return res.status(403).json({
+            message: "Access denied. Admin only"
         });
     }
+
+    next();
 }
 
 module.exports = admin;

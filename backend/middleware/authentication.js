@@ -1,21 +1,19 @@
 const jwt = require("jsonwebtoken");
 
 function authMiddleware(req, res, next) {
-
     try {
-
-        const token = req.cookies?.access
+        const token = req.cookies?.access;
 
         if (!token) {
-            return res.json({
+            return res.status(401).json({
                 message: "Access token required"
             });
         }
 
         const decoded = jwt.verify(token, process.env.JWT);
 
-        if (decoded.type !== "access") {
-            return res.json({
+        if (decoded.type !== "access" || !decoded.id) {
+            return res.status(401).json({
                 message: "Invalid access token"
             });
         }
@@ -25,8 +23,7 @@ function authMiddleware(req, res, next) {
         next();
 
     } catch (error) {
-
-        return res.json({
+        return res.status(401).json({
             message: "Invalid or expired access token"
         });
     }

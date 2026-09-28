@@ -4,55 +4,69 @@ const admin = require("../middleware/admin");
 const Subscription = require("../models/Subscription");
 
 const subRouter = express.Router();
+const plans = ["free", "premium", "pro"];
 
-subRouter.post("/get", authentication, async (req, res) => {
+subRouter.get("/", authentication, async (req, res) => {
+    try {
+        const subscription = await Subscription.findOne({ user: req.user.id });
+
+        return res.json({
+            subscription: subscription || null
+        });
+    } catch (error) {
+        console.error("Failed to fetch subscription:", error);
+
+        return res.json({
+            message: "Unable to fetch subscription"
+        });
+    }
+});
+
+subRouter.post("/add", authentication, async (req, res) => {
     try {
         const { plan = "free" } = req.body;
 
-        if (!["free", "premium", "pro"].includes(plan)) {
+        if (!plans.includes(plan)) {
             return res.json({
                 message: "Invalid plan"
             });
         }
 
-        let subscription = await Subscription.findOne({ user: req.user.id });
-
-        if (subscription) {
-            subscription.plan = plan;
-            await subscription.save();
-
-            return res.json({
-                message: "Plan updated successfully",
-                subscription
-            });
-        }
-
-        subscription = await Subscription.create({
-            user: req.user.id,
-            plan
-        });
+        const subscription = await Subscription.findOneAndUpdate(
+            { user: req.user.id },
+            { $set: { plan } },
+            {
+                new: true,
+                upsert: false,
+                runValidators: true,
+            }
+        );
 
         return res.json({
-            message: "Plan created successfully",
+            message: "Plan saved successfully",
             subscription
-        })
+        });
     } catch (error) {
+        console.error("Failed to save subscription:", error);
+
         return res.json({
-            message: error.message
-        })
+            message: "Unable to save subscription"
+        });
     }
-})
+});
 
 subRouter.get("/all", authentication, admin, async (req, res) => {
     try {
-        const all = await Subscription.find().populate("user", "name email role");;
+        const all = await Subscription.find().populate("user", "name email role");
 
-        return res.json(all)
+        return res.json(all);
     } catch (error) {
-        return res.json({
-            message: error.message
-        })
-    }
-})
+        console.error("Failed to fetch subscriptions:", error);
 
-module.exports = subRouter
+        return res.json({
+            message: "Unable to fetch subscriptions"
+        });
+    }
+});
+
+module.exports = subRouter;

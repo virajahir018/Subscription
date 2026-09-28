@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const subscriSchema = new mongoose.Schema(
+const subscriptionSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -13,9 +13,12 @@ const subscriSchema = new mongoose.Schema(
             enum: ["free", "premium", "pro"],
             default: "free"
         }
+    },
+    {
+        timestamps: true
     }
 );
 
-const Subscription = mongoose.model("Subscription", subscriSchema);
+const Subscription = mongoose.model("Subscription", subscriptionSchema);
 
 module.exports = Subscription;

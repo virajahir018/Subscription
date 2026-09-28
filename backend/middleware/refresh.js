@@ -1,21 +1,19 @@
 const jwt = require("jsonwebtoken");
 
 function refresh(req, res, next) {
-
     try {
-
-        const token = req.cookies?.refresh
+        const token = req.cookies?.refresh;
 
         if (!token) {
-            return res.json({
+            return res.status(401).json({
                 message: "Refresh token required"
             });
         }
 
         const decoded = jwt.verify(token, process.env.JWT);
 
-        if (decoded.type !== "refresh") {
-            return res.json({
+        if (decoded.type !== "refresh" || !decoded.id) {
+            return res.status(401).json({
                 message: "Invalid refresh token"
             });
         }
@@ -25,8 +23,7 @@ function refresh(req, res, next) {
         next();
 
     } catch (error) {
-
-        return res.json({
+        return res.status(401).json({
             message: "Invalid or expired refresh token"
         });
     }

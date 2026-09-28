@@ -1,16 +1,23 @@
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors")
+
 const connectDB = require("./config/db");
 const userRouters = require("./routes/userRoute");
 const contentRouter = require("./routes/contentRoute");
 const subRouter = require("./routes/subscriptionRoute");
 const cookie = require("cookie-parser");
 
-const app = express();
-const PORT = process.env.PORT
+if (!process.env.JWT || !process.env.MONGO_URI) {
+    throw new Error("JWT and MONGO_URI environment variables are required");
+}
 
-app.use(express.json());
+const app = express();
+const PORT = Number(process.env.PORT);
+
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
 app.use(cookie());
 
 app.use("/user", userRouters)
@@ -23,18 +30,28 @@ app.get("/", (req, res) => {
     });
 });
 
+app.use((req, res) => {
+    res.status(404).json({
+        message: "Route not found"
+    });
+});
+
 async function startServer() {
     try {
         await connectDB();
 
-        app.listen(process.env.PORT, () => {
+        app.listen(PORT, () => {
             console.log("Server running on port", PORT);
         });
 
     } catch (error) {
-        console.log("Database connection failed", error.message);
+        console.error("Database connection failed", error.message);
         process.exit(1);
     }
 }
 
-startServer();
+if (require.main === module) {
+    startServer();
+}
+
+module.exports = app;
