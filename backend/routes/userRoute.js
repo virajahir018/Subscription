@@ -1,11 +1,14 @@
 const express = require("express");
-const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const generateToken = require("../token/generateToken");
+const crypto = require("crypto")
+
+const User = require("../models/User");
+const generateToken = require("../utils/generateToken");
 const authentication = require("../middleware/authentication");
 const refresh = require("../middleware/refresh");
 const admin = require("../middleware/admin");
+const Transporter = require("../utils/sendEmail");
 
 const userRouters = express.Router();
 const isProduction = process.env.NODE_ENV === "production";
@@ -201,52 +204,55 @@ userRouters.post("/forgot-password", async (req, res) => {
             });
         }
 
-        const resetToken = generateToken({
+        const otp = crypto.randomInt(100000, 1000000).toString();
+
+        user.resetOtp = otp;
+        user.resetOtpExpire = new Date(Date.now() + 5 * 60 * 1000);
+
+        await user.save();
+
+        const token = generateToken({
             id: user._id,
             email: user.email,
             role: user.role
         })
 
-        res.json(user)
+        const resetToken = token.accessToken
+
+        console.log(resetToken)
+
+        await Transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Password Reset OTP",
+            text: `Your password reset OTP is ${otp}. This OTP is valid for 5 minutes.`
+        })
+
+        res.json({
+            message: "OTP sent successfully",
+            resetToken
+        })
 
     } catch (error) {
         res.json({
             message: error.message
         })
     }
-
-
 })
 
 userRouters.post("/reset-password", async (req, res) => {
     try {
-        const { token, password } = req.body;
+        const { otp } = req.body;
 
-        if (!token) {
+        if (!otp) {
             return res.status(400).json({
-                message: "Token required"
+                message: "OTP required"
             });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT);
 
-        const user = await User.findById(decoded.id);
 
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        user.password = hashedPassword;
-
-        await user.save();
-
-        res.json({
-            message: "Password reset successfully"
-        });
+        res.json(otp);
 
     } catch (error) {
         res.status(400).json({
