@@ -25,6 +25,15 @@ export default function Navbar() {
 
                 <li>
                     <Link
+                        to="/verify-otp"
+                        className="text-white font-semibold hover:text-blue-400 transition duration-300"
+                    >
+                        Verify OTP
+                    </Link>
+                </li>
+
+                <li>
+                    <Link
                         to="/reset-password"
                         className="text-white font-semibold hover:text-blue-400 transition duration-300"
                     >

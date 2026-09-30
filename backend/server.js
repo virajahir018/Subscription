@@ -2,12 +2,14 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors")
+const cookie = require("cookie-parser");
+const session = require("express-session");
 
 const connectDB = require("./config/db");
 const userRouters = require("./routes/userRoute");
 const contentRouter = require("./routes/contentRoute");
 const subRouter = require("./routes/subscriptionRoute");
-const cookie = require("cookie-parser");
+
 
 if (!process.env.JWT || !process.env.MONGO_URI) {
     throw new Error("JWT and MONGO_URI environment variables are required");
@@ -16,8 +18,27 @@ if (!process.env.JWT || !process.env.MONGO_URI) {
 const app = express();
 const PORT = Number(process.env.PORT);
 
-app.use(cors());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
+
 app.use(express.json({ limit: "1mb" }));
+
+
+app.use(session({
+    secret: process.env.JWT,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        maxAge: 5 * 60 * 1000
+    }
+    
+}));
+
 app.use(cookie());
 
 app.use("/user", userRouters)

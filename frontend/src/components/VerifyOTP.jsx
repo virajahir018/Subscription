@@ -1,24 +1,45 @@
+import axios from 'axios';
 import React, { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function VerifyOTP() {
     const [otp, setOtp] = useState("");
-
-    const location = useLocation();
     const navigate = useNavigate();
 
-    console.log(location)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await axios.post("http://localhost:3000/user/verify-otp",
+                { otp },
+                { withCredentials: true }
+            )
+
+            console.log(response.data);
+
+            navigate("/reset-password")
+
+        } catch (error) {
+            console.log(error.response?.data);
+        }
+    }
+
+    console.log(otp)
+
+
     return (
-        <div>
+        <div className="text-center">
+
             <form onSubmit={handleSubmit}>
 
                 <input
                     type="text"
-                    placeholder='Enter OTP'
+                    placeholder="Enter otp"
                     maxLength={6}
-                    inputMode='numeric'
-                    className="w-50 px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 mr-5"
+                    inputMode="numeric"
+                    value={otp}
                     onChange={(e) => setOtp(e.target.value)}
+                    className="w-50 px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 mt-5 mr-5"
                 />
 
                 <button
@@ -27,7 +48,9 @@ export default function VerifyOTP() {
                 >
                     Send
                 </button>
+
             </form>
+
         </div>
     )
 }

@@ -206,20 +206,8 @@ userRouters.post("/forgot-password", async (req, res) => {
 
         const otp = crypto.randomInt(100000, 1000000).toString();
 
-        user.resetOtp = otp;
-        user.resetOtpExpire = new Date(Date.now() + 5 * 60 * 1000);
-
-        await user.save();
-
-        const token = generateToken({
-            id: user._id,
-            email: user.email,
-            role: user.role
-        })
-
-        const resetToken = token.accessToken
-
-        console.log(resetToken)
+        req.session.otp = otp;
+        req.session.email = email;
 
         await Transporter.sendMail({
             from: process.env.EMAIL_USER,
@@ -230,8 +218,47 @@ userRouters.post("/forgot-password", async (req, res) => {
 
         res.json({
             message: "OTP sent successfully",
-            resetToken
+            session: req.session
         })
+
+    } catch (error) {
+        res.json({
+            message: error.message
+        })
+    }
+})
+
+userRouters.post("/verify-otp", async (req, res) => {
+    try {
+        const { otp } = req.body;
+
+        if (!otp) {
+            return res.status(400).json({
+                message: "OTP required"
+            });
+        }
+
+        if (otp.length !== 6) {
+            return res.status(400).json({
+                message: "OTP must be 6 digits"
+            });
+        }
+
+
+        const match = req.session.otp;
+        console.log(match)
+
+        // if (match !== otp) {
+        //     return res.status(400).json({
+        //         message: "Please enter currect OTP"
+        //     });
+        // }
+
+        res.json({
+            message: "succesfull",
+            session: req.session
+        })
+
 
     } catch (error) {
         res.json({
@@ -242,7 +269,8 @@ userRouters.post("/forgot-password", async (req, res) => {
 
 userRouters.post("/reset-password", async (req, res) => {
     try {
-        const { otp } = req.body;
+        const otp = req.body;
+        console.log(otp)
 
         if (!otp) {
             return res.status(400).json({

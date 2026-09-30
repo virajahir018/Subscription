@@ -16,14 +16,15 @@ function ForgotPassword() {
                 "http://localhost:3000/user/forgot-password",
                 {
                     email
+                },
+                {
+                    withCredentials: true
                 }
             );
 
             console.log(response.data);
 
-            navigate("/verify-otp", {
-                state: email
-            })
+            navigate("/verify-otp")
 
 
         } catch (error) {
@@ -34,8 +35,6 @@ function ForgotPassword() {
 
     return (
         <div className="text-center">
-
-            <h2>Forgot Password</h2>
 
             <form onSubmit={handleSubmit}>
 
