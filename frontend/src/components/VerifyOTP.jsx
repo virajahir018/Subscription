@@ -24,9 +24,6 @@ export default function VerifyOTP() {
         }
     }
 
-    console.log(otp)
-
-
     return (
         <div className="text-center">
 

@@ -1,9 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { FaBeer, FaHome, FaUser, FaUserAlt } from "react-icons/fa";
 
 export default function Navbar() {
+    
     return (
-        <nav className="bg-gray-900 px-6 py-4 shadow-lg mb-20">
+        <nav className="flex justify-between bg-gray-900 px-6 py-4 shadow-lg mb-20">
             <ul className="flex items-center justify-center gap-8">
                 <li>
                     <Link
@@ -41,7 +43,14 @@ export default function Navbar() {
                     </Link>
                 </li>
 
+                <li>
+
+                </li>
             </ul>
+
+            <Link to="/user-login">
+                <FaUserAlt className='text-white font-semibold hover:text-blue-400 transition duration-300' />
+            </Link>
         </nav>
     )
 }

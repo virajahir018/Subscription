@@ -11,36 +11,42 @@ export default function ResetPassword() {
 
         e.preventDefault();
 
+        if (!password) {
+            setError("Please enter password");
+            return;
+        }
+
         if (password !== confirmPassword) {
             setError("Password and confirm password must be same");
             return;
         }
 
-        ser
+        setError("");
 
-        console.log(password)
-        console.log(confirmPassword)
+        try {
 
-        // try {
+            const response = await axios.post("http://localhost:3000/user/reset-password",
+                { password, confirmPassword },
+                { withCredentials: true }
+            )
 
-        //     const response = await axios.post("http://localhost:3000/user/reset-password", { otp, email })
+            console.log(response.data)
 
-        //     console.log(response.data)
-
-        // } catch (error) {
-        //     console.log(error.response?.data)
-        // }
+        } catch (error) {
+            console.log(error.response?.data)
+        }
     }
 
 
     return (
-        <div className="text-center">
+        <div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4 items-center">
 
                 <input
                     type="text"
                     placeholder="Enter New Password"
+                    minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-50 px-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
